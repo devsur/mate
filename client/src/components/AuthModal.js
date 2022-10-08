@@ -31,6 +31,7 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
             const success = response.status === 201;
             if (success && isSignUp) navigate('/onboarding');
             if (success && !isSignUp) navigate('/dashboard');
+            window.location.reload(); // load cookie data into redirected page
         } catch (error) {
             console.log(error);
         }
