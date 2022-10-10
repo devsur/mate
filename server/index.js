@@ -66,6 +66,32 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// given array of ids, return user objects
+app.get('/users', async (req, res) => {
+    const client = new MongoClient(uri);
+    const userIds = JSON.parse(req.query.userIds);
+    console.log(userIds);
+    try {
+        await client.connect();
+        const database = client.db('app-data');
+        const users = database.collection('users');
+        const pipeline = [
+            {
+                '$match': {
+                    'user_id': {
+                        '$in': userIds
+                    }
+                }
+            }
+        ];
+        const foundUsers = await users.aggregate(pipeline).toArray();
+        console.log(foundUsers);
+        res.send(foundUsers);
+    } finally {
+        await client.close();
+    }
+});
+
 app.get('/gendered-users', async (req, res) => {
     const client = new MongoClient(uri);
     const gender = req.query.gender; 
@@ -139,6 +165,22 @@ app.put('/addmatch', async (req, res) => {
         };
         const user = await users.updateOne(query, updateDocument);
         res.send(user);
+    } finally {
+        await client.close();
+    }
+});
+
+app.get('/messages', async (req, res) => {
+    const client = new MongoClient(uri);
+    const {userId, correspondingUserId} = req.query;
+    console.log(userId, correspondingUserId);
+    try {
+        await client.connect();
+        const database = client.db('app-data');
+        const messages = database.collection('messages');
+        const query = {from_userId: userId, to_userId: correspondingUserId};
+        const foundMessages = await messages.find(query).toArray();
+        res.send(foundMessages);
     } finally {
         await client.close();
     }
