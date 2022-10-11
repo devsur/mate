@@ -22,7 +22,7 @@ const MatchesDisplay = ({matches, setClickedUser}) => {
 
     useEffect(() => {
         getMatches();
-    }, [/* matches */]); // only get matches if user's matches exist/update
+    }, [matches]); // only get matches if user's matches exist/update
 
     // add filter to display only actual mutual matches where both users swiped right
     // filter user.matches for each match if match also includes user's id in their .matches list

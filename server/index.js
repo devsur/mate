@@ -5,8 +5,10 @@ const {v4: uuidv4} = require('uuid');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
-const uri = `mongodb+srv://admin:mypassword@cluster0.epmz51z.mongodb.net/cluster0?retryWrites=true&w=majority`;
+require('dotenv').config();
+const uri = process.env.URI;
 const PORT = 8000;
+
 
 app.use(cors());
 app.use(express.json()); // access req, res props as json i.e req.body
@@ -63,6 +65,8 @@ app.post('/login', async (req, res) => {
         res.status(400).send('Invalid credentials');
     } catch (err) {
         console.log(err);
+    } finally {
+        await client.close();
     }
 });
 
