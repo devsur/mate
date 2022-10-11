@@ -39,6 +39,15 @@ const Dashboard = () => {
     //   getGenderedUsers();
     // }, []);
 
+    // fixes infinite loop: separate dependent fetch calls, second fetch monitors first response's state (user)
+    // useEffect(() => {
+    //   getUser();
+    // }, []);
+
+    // useEffect(() => {
+    //   getGenderedUsers();
+    // }, [user]); // fix timing issue: get user before getting gusers
+
     useEffect(() => {
       const getUserAndGenUsers = async () => {
         try {
