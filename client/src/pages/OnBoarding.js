@@ -39,8 +39,6 @@ const OnBoarding = () => {
         setFormData(prevState => ({...prevState, [name]: value}));
     };
 
-    console.log(formData)
-
     return (
         <>
             <Nav minimal={true} setShowModal={() => {}} showModal={false} />

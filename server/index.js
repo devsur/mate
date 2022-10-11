@@ -5,8 +5,10 @@ const {v4: uuidv4} = require('uuid');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
-const uri = `mongodb+srv://admin:mypassword@cluster0.epmz51z.mongodb.net/cluster0?retryWrites=true&w=majority`;
+require('dotenv').config();
+const uri = process.env.URI;
 const PORT = 8000;
+
 
 app.use(cors());
 app.use(express.json()); // access req, res props as json i.e req.body
@@ -63,17 +65,46 @@ app.post('/login', async (req, res) => {
         res.status(400).send('Invalid credentials');
     } catch (err) {
         console.log(err);
+    } finally {
+        await client.close();
     }
 });
 
+// given array of ids, return user objects
 app.get('/users', async (req, res) => {
     const client = new MongoClient(uri);
+    const userIds = JSON.parse(req.query.userIds);
     try {
         await client.connect();
         const database = client.db('app-data');
         const users = database.collection('users');
-        const resUsers = await users.find().toArray();
-        res.send(resUsers);
+        const pipeline = [
+            {
+                '$match': {
+                    'user_id': {
+                        '$in': userIds
+                    }
+                }
+            }
+        ];
+        const foundUsers = await users.aggregate(pipeline).toArray();
+        res.send(foundUsers);
+    } finally {
+        await client.close();
+    }
+});
+
+app.get('/gendered-users', async (req, res) => {
+    const client = new MongoClient(uri);
+    const gender = req.query.gender; 
+    try {
+        await client.connect();
+        const database = client.db('app-data');
+        const users = database.collection('users');
+        const query = {gender_identity: {$eq: gender}};
+        const foundUsers = await users.find(query).toArray();
+        // const resUsers = await users.find().toArray();
+        res.send(foundUsers);
     } finally {
         await client.close();
     }
@@ -118,6 +149,53 @@ app.get('/user', async (req, res) => {
         const query = {user_id: userId};
         const user = await users.findOne(query);
         res.send(user);
+    } finally {
+        await client.close();
+    }
+});
+
+app.put('/addmatch', async (req, res) => {
+    const client = new MongoClient(uri);
+    const {userId, matchedUserId} = req.body;
+    try {
+        await client.connect();
+        const database = client.db('app-data');
+        const users = database.collection('users');
+        const query = {user_id: userId};
+        const updateDocument = {
+            $push: {matches: {user_id: matchedUserId}}
+        };
+        const user = await users.updateOne(query, updateDocument);
+        res.send(user);
+    } finally {
+        await client.close();
+    }
+});
+
+app.get('/messages', async (req, res) => {
+    const client = new MongoClient(uri);
+    const {userId, correspondingUserId} = req.query;
+    try {
+        await client.connect();
+        const database = client.db('app-data');
+        const messages = database.collection('messages');
+        const query = {from_userId: userId, to_userId: correspondingUserId};
+        const foundMessages = await messages.find(query).toArray();
+        res.send(foundMessages);
+    } finally {
+        await client.close();
+    }
+});
+
+app.post('/message', async (req, res) => {
+    const client = new MongoClient(uri);
+    const {message} = req.body;
+    try {
+        await client.connect();
+        const database = client.db('app-data');
+        const messages = database.collection('messages');
+        const insertedMessage = await messages.insertOne(message);
+        res.send(insertedMessage);
     } finally {
         await client.close();
     }
